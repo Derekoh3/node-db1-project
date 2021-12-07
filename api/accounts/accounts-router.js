@@ -1,27 +1,79 @@
-const router = require('express').Router()
+const router = require("express").Router();
+const db = require("../../data/db-config");
+const middleware = require("./accounts-middleware");
+const Account = require("./accounts-model");
 
-router.get('/', (req, res, next) => {
+router.get("/", async (req, res, next) => {
   // DO YOUR MAGIC
-})
-
-router.get('/:id', (req, res, next) => {
-  // DO YOUR MAGIC
-})
-
-router.post('/', (req, res, next) => {
-  // DO YOUR MAGIC
-})
-
-router.put('/:id', (req, res, next) => {
-  // DO YOUR MAGIC
+  try {
+    const accounts = await Account.getAll();
+    res.json(accounts);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.delete('/:id', (req, res, next) => {
+router.get("/:id", middleware.checkAccountId, async (req, res, next) => {
   // DO YOUR MAGIC
-})
+  const id = req.params.id;
+  try {
+    const account = await Account.getById(id);
+    res.json(account);
+  } catch (err) {
+    next(err);
+  }
+});
 
-router.use((err, req, res, next) => { // eslint-disable-line
+router.post(
+  "/",
+  middleware.checkAccountNameUnique,
+  middleware.checkAccountPayload,
+  async (req, res, next) => {
+    // DO YOUR MAGIC
+    const body = req.body;
+    try {
+      const newAccount = await Account.create(body);
+      res.status(201).json(newAccount);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.put(
+  "/:id",
+  middleware.checkAccountId,
+  middleware.checkAccountPayload,
+  async (req, res, next) => {
+    // DO YOUR MAGIC
+    const id = req.params.id;
+    const body = req.body;
+    try {
+      const updatedAccount = Account.updateById(id, body);
+      res.json(updatedAccount);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.delete("/:id", middleware.checkAccountId, async (req, res, next) => {
   // DO YOUR MAGIC
-})
+  const id = req.params.id;
+  try {
+    await Account.deleteById(id);
+    res.json(req.account);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// eslint-disable-next-line
+router.use((err, req, res, next) => {
+  // DO YOUR MAGIC
+  res.status(err.status || 404).json({
+    message: err.message,
+  });
+});
 
 module.exports = router;
